@@ -1,8 +1,3 @@
-//TODO: Add Option to add Audio, Video, Picture.
-//TODO: Add ASMRic sounds
-// If the user has added audio, then note tile will have audio icon and similarly for others as well.
-// Give an option to display image on Icons Position.
-
 import 'package:flutter/material.dart';
 import 'package:journal/models/note.dart';
 import 'package:journal/repository/notes_repository.dart';
@@ -20,22 +15,30 @@ class CreateNoteScreen extends StatefulWidget {
 class _CreateNoteScreenState extends State<CreateNoteScreen> {
   final _title = TextEditingController();
   final _description = TextEditingController();
+  String? _imagePath;
+  String? _videoPath;
+  String? _audioPath;
 
   @override
   void initState() {
     if (widget.note != null) {
       _title.text = widget.note!.title;
       _description.text = widget.note!.description;
+      _imagePath = widget.note!.imagePath;
+      _videoPath = widget.note!.videoPath;
+      _audioPath = widget.note!.audioPath;
     }
     super.initState();
   }
 
   _insert_note() async {
-    print("Creating Note");
     final note = Note(
       title: _title.text,
       description: _description.text,
       created_at: DateTime.now(),
+      imagePath: _imagePath,
+      videoPath: _videoPath,
+      audioPath: _audioPath,
     );
     await NotesRepository.insert(note: note);
   }
@@ -46,23 +49,93 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
       title: _title.text,
       description: _description.text,
       created_at: widget.note!.created_at,
+      imagePath: _imagePath,
+      videoPath: _videoPath,
+      audioPath: _audioPath,
     );
-    print("Updating Note");
     await NotesRepository.update(note: note);
   }
 
-  //TODO: Add this to swipe to delete.
   _delete_note() async {
     await NotesRepository.delete(note: widget.note!).then((e) {
       Navigator.pop(context);
     });
   }
 
+  Future<void> showMediaOptionsDialog({
+    required BuildContext context,
+    required String mediaType,
+    required Function() onRecord,
+    required Function() onUpload,
+  }) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select $mediaType Option'),
+          content: Text('Would you like to record a $mediaType or upload an existing one?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onRecord();
+              },
+              child: Text('Record $mediaType'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onUpload();
+              },
+              child: Text('Upload $mediaType'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showMediaOptions(String mediaType, Function() onRecord, Function() onUpload) async {
+    await showMediaOptionsDialog(
+      context: context,
+      mediaType: mediaType,
+      onRecord: onRecord,
+      onUpload: onUpload,
+    );
+  }
+
+  Future<void> _pickImage({bool fromCamera = false}) async {
+    final path = await get_image(fromCamera: fromCamera);
+    if (path != null) {
+      setState(() {
+        _imagePath = path;
+      });
+    }
+  }
+
+  Future<void> _pickVideo({bool fromCamera = false}) async {
+    final path = await get_video(fromCamera: fromCamera);
+    if (path != null) {
+      setState(() {
+        _videoPath = path;
+      });
+    }
+  }
+
+  Future<void> _handleAudio({bool recordAudio = false}) async {
+    final path = await handle_audio(recordAudio: recordAudio);
+    if (path != null) {
+      setState(() {
+        _audioPath = path;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    const vertical_gap = SizedBox(
-      height: 20,
-    );
+    const vertical_gap = SizedBox(height: 20);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -73,37 +146,37 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
         actions: [
           widget.note != null
               ? GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        content: const Text(
-                            'Are you sure you want to delete this note?'),
-                        actions: [
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text('Cancel')),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _delete_note();
-                              },
-                              child: const Text('Delete')),
-                        ],
-                      ),
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1, vertical: 8),
-                    child: Icon(Icons.delete),
-                  ),
-                )
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  content: const Text('Are you sure you want to delete this note?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _delete_note();
+                      },
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 1, vertical: 8),
+              child: Icon(Icons.delete),
+            ),
+          )
               : const SizedBox(),
           GestureDetector(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Icon(Icons.settings),
@@ -119,19 +192,29 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
               child: TextField(
                 controller: _description,
                 decoration: InputDecoration(
-                    hintText: 'Tell me about your day!',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
+                  hintText: 'Tell me about your day!',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 maxLines: 15,
+                cursorColor: Theme.of(context).primaryColor,
+                cursorWidth: 2.0,
+                cursorRadius: const Radius.circular(5.0),
               ),
             ),
             vertical_gap,
             TextField(
               controller: _title,
               decoration: InputDecoration(
-                  hintText: 'Your day in 1 line',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10))),
+                hintText: 'Your day in 1 line',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              cursorColor: Theme.of(context).primaryColor,
+              cursorWidth: 2.0,
+              cursorRadius: const Radius.circular(5.0),
             ),
             vertical_gap,
             vertical_gap,
@@ -149,27 +232,33 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      get_video();
-                    },
+                    onTap: () => _showMediaOptions(
+                      'Video',
+                          () => _pickVideo(fromCamera: true),
+                          () => _pickVideo(),
+                    ),
                     child: const Icon(
                       Icons.videocam,
                       size: 40,
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      get_audio();
-                    },
+                    onTap: () => _showMediaOptions(
+                      'Audio',
+                          () => _handleAudio(recordAudio: true),
+                          () => _handleAudio(),
+                    ),
                     child: const Icon(
-                      Icons.fiber_manual_record,
+                      Icons.audiotrack,
                       size: 40,
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      get_image();
-                    },
+                    onTap: () => _showMediaOptions(
+                      'Image',
+                          () => _pickImage(fromCamera: true),
+                          () => _pickImage(),
+                    ),
                     child: const Icon(
                       Icons.image,
                       size: 40,
@@ -177,14 +266,15 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () { widget.note == null ? _insert_note() : _update_note();},
-        foregroundColor: Colors.white,
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        onPressed: () {
+          widget.note != null ? _update_note() : _insert_note();
+          Navigator.pop(context);
+        },
         child: const Icon(Icons.save),
       ),
     );
