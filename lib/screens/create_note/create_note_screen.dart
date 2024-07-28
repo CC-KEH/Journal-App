@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:journal/models/note.dart';
+import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/notes_repository.dart';
 import 'package:journal/screens/Settings/Settings.dart';
 import 'package:journal/utils.dart';
+import 'package:journal/components/media_icon.dart';
+import 'package:journal/theme_notifier.dart';
+import 'package:provider/provider.dart';
 
 class CreateNoteScreen extends StatefulWidget {
   final Note? note;
-  const CreateNoteScreen({super.key, this.note});
+  final bool isTitleBelow;
+
+  const CreateNoteScreen({
+    super.key,
+    this.note,
+    required this.isTitleBelow,
+  });
 
   @override
   State<CreateNoteScreen> createState() => _CreateNoteScreenState();
@@ -74,7 +84,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Select $mediaType Option'),
-          content: Text('Would you like to record a $mediaType or upload an existing one?'),
+          content: Text(
+              'Would you like to record a $mediaType or upload an existing one?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -96,7 +107,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
     );
   }
 
-  Future<void> _showMediaOptions(String mediaType, Function() onRecord, Function() onUpload) async {
+  Future<void> _showMediaOptions(
+      String mediaType, Function() onRecord, Function() onUpload) async {
     await showMediaOptionsDialog(
       context: context,
       mediaType: mediaType,
@@ -135,6 +147,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   @override
   Widget build(BuildContext context) {
     const vertical_gap = SizedBox(height: 20);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -146,37 +159,45 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
         actions: [
           widget.note != null
               ? GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  content: const Text('Are you sure you want to delete this note?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _delete_note();
-                      },
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 1, vertical: 8),
-              child: Icon(Icons.delete),
-            ),
-          )
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        content: const Text(
+                            'Are you sure you want to delete this note?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _delete_note();
+                            },
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 1, vertical: 8),
+                    child: Icon(Icons.delete),
+                  ),
+                )
               : const SizedBox(),
           GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => SettingsScreen(
+                          onThemeChanged: () =>
+                              Provider.of<ThemeNotifier>(context, listen: false)
+                                  .notifyListeners(),
+                        ))),
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Icon(Icons.settings),
@@ -188,6 +209,21 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
         padding: const EdgeInsets.all(15.0),
         child: Column(
           children: [
+            if (!settingsProvider.isTitleBelow) ...[
+              TextField(
+                controller: _title,
+                decoration: InputDecoration(
+                  hintText: 'Your day in 1 line',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                cursorColor: Theme.of(context).primaryColor,
+                cursorWidth: 2.0,
+                cursorRadius: const Radius.circular(5.0),
+              ),
+              vertical_gap,
+            ],
             Expanded(
               child: TextField(
                 controller: _description,
@@ -199,71 +235,103 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                 ),
                 maxLines: 15,
                 cursorColor: Theme.of(context).primaryColor,
-                cursorWidth: 2.0,
+                cursorWidth: 3.0,
                 cursorRadius: const Radius.circular(5.0),
               ),
             ),
             vertical_gap,
-            TextField(
-              controller: _title,
-              decoration: InputDecoration(
-                hintText: 'Your day in 1 line',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+            if (settingsProvider.isTitleBelow) ...[
+              TextField(
+                controller: _title,
+                decoration: InputDecoration(
+                  hintText: 'Your day in 1 line',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
+                cursorColor: Theme.of(context).primaryColor,
+                cursorWidth: 2.0,
+                cursorRadius: const Radius.circular(5.0),
               ),
-              cursorColor: Theme.of(context).primaryColor,
-              cursorWidth: 2.0,
-              cursorRadius: const Radius.circular(5.0),
-            ),
-            vertical_gap,
-            vertical_gap,
-            vertical_gap,
-            vertical_gap,
-            Container(
-              margin: const EdgeInsets.only(bottom: 60),
-              height: 70,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(50),
-              ),
+              vertical_gap,
+            ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 70),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  GestureDetector(
-                    onTap: () => _showMediaOptions(
-                      'Video',
-                          () => _pickVideo(fromCamera: true),
-                          () => _pickVideo(),
-                    ),
-                    child: const Icon(
-                      Icons.videocam,
-                      size: 40,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => _showMediaOptions(
-                      'Audio',
-                          () => _handleAudio(recordAudio: true),
-                          () => _handleAudio(),
-                    ),
-                    child: const Icon(
-                      Icons.audiotrack,
-                      size: 40,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => _showMediaOptions(
-                      'Image',
-                          () => _pickImage(fromCamera: true),
-                          () => _pickImage(),
-                    ),
-                    child: const Icon(
-                      Icons.image,
-                      size: 40,
-                    ),
-                  ),
+                  _imagePath != null
+                      ? MediaItem(
+                          filePath: _imagePath!,
+                          mediaType: 'image',
+                          onDelete: () {
+                            setState(() {
+                              _imagePath = null;
+                            });
+                          },
+                          onView: () {
+                            // Implement image viewing functionality here
+                          },
+                        )
+                      : GestureDetector(
+                          onTap: () => _showMediaOptions(
+                            'Image',
+                            () => _pickImage(fromCamera: true),
+                            () => _pickImage(),
+                          ),
+                          child: const Icon(
+                            Icons.image,
+                            size: 40,
+                          ),
+                        ),
+                  _videoPath != null
+                      ? MediaItem(
+                          filePath: _videoPath!,
+                          mediaType: 'video',
+                          onDelete: () {
+                            setState(() {
+                              _videoPath = null;
+                            });
+                          },
+                          onView: () {
+                            // Implement video viewing functionality here
+                          },
+                        )
+                      : GestureDetector(
+                          onTap: () => _showMediaOptions(
+                            'Video',
+                            () => _pickVideo(fromCamera: true),
+                            () => _pickVideo(),
+                          ),
+                          child: const Icon(
+                            Icons.videocam,
+                            size: 40,
+                          ),
+                        ),
+                  _audioPath != null
+                      ? MediaItem(
+                          filePath: _audioPath!,
+                          mediaType: 'audio',
+                          onDelete: () {
+                            setState(() {
+                              _audioPath = null;
+                            });
+                          },
+                          onView: () {
+                            // Implement audio playback functionality here
+                          },
+                        )
+                      : GestureDetector(
+                          onTap: () => _showMediaOptions(
+                            'Audio',
+                            () => _handleAudio(recordAudio: true),
+                            () => _handleAudio(),
+                          ),
+                          child: const Icon(
+                            Icons.audiotrack,
+                            size: 40,
+                          ),
+                        ),
                 ],
               ),
             ),

@@ -1,18 +1,89 @@
 import 'package:flutter/material.dart';
-import 'package:journal/models/note.dart';
-import 'package:journal/repository/notes_repository.dart';
+import 'package:journal/notifiers/settings_notifier.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:journal/theme_notifier.dart';
+import 'package:provider/provider.dart';
+import 'package:journal/notifications.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final Function() onThemeChanged;
+
+  const SettingsScreen({Key? key, required this.onThemeChanged}) : super(key: key);
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isDarkTheme = false;
+  bool _isGridView = false;
+  bool _isNotificationsOn = true;
+  bool _isTitleBelow = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  _loadPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+      _isGridView = prefs.getBool('isGridView') ?? false;
+      _isNotificationsOn = prefs.getBool('isNotificationsOn') ?? true;
+      _isTitleBelow = prefs.getBool('isTitleBelow') ?? true;
+    });
+  }
+
+  _savePreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkTheme', _isDarkTheme);
+    await prefs.setBool('isGridView', _isGridView);
+    await prefs.setBool('isNotificationsOn', _isNotificationsOn);
+    await prefs.setBool('isTitleBelow', _isTitleBelow);
+    widget.onThemeChanged(); // Notify theme change
+  }
+
+  _toggleTheme(bool value) {
+    setState(() => _isDarkTheme = value);
+    _savePreferences();
+
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+
+    if (_isDarkTheme) {
+      themeNotifier.setDarkTheme();
+    } else {
+      themeNotifier.setLightTheme();
+    }
+  }
+
+  _toggleView(bool value) {
+    setState(() => _isGridView = value);
+    _savePreferences();
+  }
+
+  _toggleNotifications(bool value) {
+    setState(() => _isNotificationsOn = value);
+    _savePreferences();
+    if (_isNotificationsOn) {
+      scheduleNotifications(); // Enable notifications
+    } else {
+      cancelNotifications(); // Disable notifications
+    }
+  }
+
+  _toggleTitlePosition(bool value) {
+    setState(() => _isTitleBelow = value);
+    _savePreferences();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
-    const _vertical_gap = SizedBox(height: 20);
+    const _verticalGap = SizedBox(height: 20);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -24,72 +95,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Container(
-          margin: EdgeInsets.only(top: 50),
+          margin: const EdgeInsets.only(top: 50),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                height: 20,
-                width: MediaQuery.of(context).size.width,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Dark Theme'),
-                    Icon(Icons.check_box),
-                  ],
-                ),
+              SwitchListTile(
+                title: const Text('Dark Theme'),
+                value: _isDarkTheme,
+                onChanged: _toggleTheme,
               ),
-              _vertical_gap,
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                height: 20,
-                width: MediaQuery.of(context).size.width,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Sound Fx'),
-                    Icon(Icons.check_box),
-                  ],
-                ),
+              _verticalGap,
+              SwitchListTile(
+                title: const Text('Grid View'),
+                value: _isGridView,
+                onChanged: (value) {
+                  settingsProvider.setViewChange(value);
+                  setState(() => _isGridView = value);
+                },
               ),
-              _vertical_gap,
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                height: 20,
-                width: MediaQuery.of(context).size.width,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Save data to drive'),
-                    Icon(Icons.check_box),
-                  ],
-                ),
+              _verticalGap,
+              SwitchListTile(
+                title: const Text('Notifications'),
+                value: _isNotificationsOn,
+                onChanged: _toggleNotifications,
+
               ),
-              _vertical_gap,
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                height: 20,
-                width: MediaQuery.of(context).size.width,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Position title below the description'),
-                    Icon(Icons.check_box),
-                  ],
-                ),
-              ),
-              _vertical_gap,
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                height: 20,
-                width: MediaQuery.of(context).size.width,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Create Custom Theme'),
-                    Icon(Icons.check_box),
-                  ],
-                ),
+              _verticalGap,
+              SwitchListTile(
+                title: const Text('Position title below the description'),
+                value: _isTitleBelow,
+                onChanged: (value) {
+                  settingsProvider.setTitlePosition(value);
+                  setState(() => _isTitleBelow = value);
+                },
               ),
             ],
           ),

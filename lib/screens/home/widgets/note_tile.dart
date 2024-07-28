@@ -6,13 +6,15 @@ import 'package:journal/screens/create_note/create_note_screen.dart';
 
 class NoteTile extends StatelessWidget {
   final Note note;
+  bool isGridView = false;
+  bool isTitleBelow = true;
+  final bool isSelected;
 
-  const NoteTile({super.key, required this.note});
+  NoteTile({super.key,required this.isSelected, required this.note,required this.isGridView,required this.isTitleBelow});
 
   @override
   Widget build(BuildContext context) {
     const double list_item_height = 80.0;
-    const Color list_item_color = Color(0xffffffff);
 
     return GestureDetector(
       onTap: () {
@@ -21,6 +23,7 @@ class NoteTile extends StatelessWidget {
           MaterialPageRoute(
             builder: (_) => CreateNoteScreen(
               note: note,
+              isTitleBelow: isTitleBelow,
             ),
           ),
         );
@@ -29,7 +32,7 @@ class NoteTile extends StatelessWidget {
         margin: const EdgeInsets.all(3),
         height: list_item_height,
         decoration: BoxDecoration(
-          color: list_item_color,
+          color: isSelected ? Colors.blue.withOpacity(0.5) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(5),
         ),
         padding: const EdgeInsets.all(5),

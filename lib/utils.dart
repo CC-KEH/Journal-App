@@ -67,6 +67,5 @@ Future<String?> handle_audio({bool recordAudio = false}) async {
       filePath = savedFile.path;
     }
   }
-
   return filePath;
 }
