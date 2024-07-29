@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:journal/models/note.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/notes_repository.dart';
@@ -25,6 +26,7 @@ class CreateNoteScreen extends StatefulWidget {
 class _CreateNoteScreenState extends State<CreateNoteScreen> {
   final _title = TextEditingController();
   final _description = TextEditingController();
+  String _heading = 'New Entry';
   String? _imagePath;
   String? _videoPath;
   String? _audioPath;
@@ -32,6 +34,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   @override
   void initState() {
     if (widget.note != null) {
+      _heading = '${DateFormat(DateFormat.DAY).format(widget.note!.created_at)} ${DateFormat(DateFormat.ABBR_MONTH).format(widget.note!.created_at)} ${widget.note!.created_at.year.toString()}';
       _title.text = widget.note!.title;
       _description.text = widget.note!.description;
       _imagePath = widget.note!.imagePath;
@@ -151,9 +154,9 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'New Entry',
-          style: TextStyle(fontSize: 32),
+        title: Text(
+          _heading,
+          style: const TextStyle(fontSize: 32),
         ),
         centerTitle: true,
         actions: [
@@ -183,10 +186,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                       ),
                     );
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1, vertical: 8),
-                    child: Icon(Icons.delete),
-                  ),
+                  child: const Icon(Icons.delete),
                 )
               : const SizedBox(),
           GestureDetector(
@@ -213,6 +213,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
               TextField(
                 controller: _title,
                 decoration: InputDecoration(
+                  labelText: 'Title',
                   hintText: 'Your day in 1 line',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -228,6 +229,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
               child: TextField(
                 controller: _description,
                 decoration: InputDecoration(
+                  labelText: 'Description',
                   hintText: 'Tell me about your day!',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),

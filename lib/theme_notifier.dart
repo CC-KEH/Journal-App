@@ -25,7 +25,7 @@ class ThemeNotifier extends ChangeNotifier {
       primary: Colors.teal,
       secondary: Colors.tealAccent,
     ),
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: const Color(0xFF121212),
     cardColor: const Color(0xFF0e1111),
     appBarTheme: const AppBarTheme(
       backgroundColor: Color(0xFF0e1111),

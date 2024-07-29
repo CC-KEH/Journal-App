@@ -58,11 +58,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  _toggleView(bool value) {
-    setState(() => _isGridView = value);
-    _savePreferences();
-  }
-
   _toggleNotifications(bool value) {
     setState(() => _isNotificationsOn = value);
     _savePreferences();
@@ -72,12 +67,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       cancelNotifications(); // Disable notifications
     }
   }
-
-  _toggleTitlePosition(bool value) {
-    setState(() => _isTitleBelow = value);
-    _savePreferences();
-  }
-
 
   @override
   Widget build(BuildContext context) {

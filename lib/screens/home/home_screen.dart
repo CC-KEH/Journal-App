@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:journal/constants.dart';
+import 'package:journal/helpers/drawer_navigation.dart';
 import 'package:journal/models/note.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/notes_repository.dart';
@@ -9,6 +11,7 @@ import 'package:journal/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journal/main.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _isSelectionMode = false;
-  Set<Note> _selectedNotes = {};
+  final Set<Note> _selectedNotes = {};
 
   @override
   void initState() {
@@ -82,8 +85,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-
     return Scaffold(
+      drawer: const DrawerNavigation(),
       appBar: AppBar(
         title: const Text(
           'Journal',
@@ -117,16 +120,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data == null || snapshot.data!.isEmpty) {
               return const Center(
-                child: Text('Empty'),
+                child: Text(journal_recommendation_text),
               );
             }
             if (settingsProvider.isGridView) {
-              return GridView.count(
-                crossAxisCount: 2,
-                padding: const EdgeInsets.all(8.0),
-                children: [
-                  for (var note in snapshot.data!)
-                    GestureDetector(
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 70,horizontal: 0),
+                child: CarouselSlider.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) {
+                    final note = snapshot.data![itemIndex];
+                    return GestureDetector(
                       onLongPress: () => _toggleSelection(note),
                       child: NoteTile(
                         note: note,
@@ -134,8 +138,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         isGridView: settingsProvider.isGridView,
                         isTitleBelow: settingsProvider.isTitleBelow,
                       ),
-                    )
-                ],
+                    );
+                  },
+                  options: CarouselOptions(
+                    height: 500.0, // Adjust height as needed
+                    enlargeCenterPage: true,
+                    autoPlay: true,
+                    aspectRatio: 16 / 9,
+                    autoPlayCurve: Curves.fastOutSlowIn,
+                    enableInfiniteScroll: false,
+                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                    viewportFraction: 0.8,
+                  ),
+                ),
               );
             } else {
               return ListView(

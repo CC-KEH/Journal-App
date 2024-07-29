@@ -1,60 +1,61 @@
-import 'package:journal/models/note.dart';
+import 'package:journal/models/todo.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class NotesRepository {
-  static const _database_nane = 'notes_database.db';
-  static const _table_name = 'notes';
+class TodosRepository {
+  static const _database_nane = 'todos_database.db';
+  static const _table_name = 'todos';
 
   static Future<Database> _database() async {
     final database = openDatabase(
       join(await getDatabasesPath(), _database_nane),
       onCreate: (db, version) {
         return db.execute(
-            'CREATE TABLE $_table_name(id INTEGER PRIMARY KEY, title TEXT, description TEXT, created_at TEXT)');
+            'CREATE TABLE $_table_name(id INTEGER PRIMARY KEY, title TEXT, description TEXT, deadline TEXT, isFinished INTEGER)');
       },
       version: 1,
     );
     return database;
   }
 
-  static insert({required Note note}) async {
+  static insert({required Todo todo}) async {
     final db = await _database();
     await db.insert(
       _table_name,
-      note.toMap(),
+      todo.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  static update({required Note note}) async {
+  static update({required Todo todo}) async {
     final db = await _database();
     await db.update(
       _table_name,
-      note.toMap(),
+      todo.toMap(),
       where: 'id = ?',
-      whereArgs: [note.id],
+      whereArgs: [todo.id],
     );
   }
 
-  static delete({required Note note}) async {
+  static delete({required Todo todo}) async {
     final db = await _database();
     await db.delete(
       _table_name,
       where: 'id = ?',
-      whereArgs: [note.id],
+      whereArgs: [todo.id],
     );
   }
 
-  static Future<List<Note>> get_notes() async {
+  static Future<List<Todo>> get_todos() async {
     final db = await _database();
     final List<Map<String, dynamic>> maps = await db.query(_table_name);
     return List.generate(maps.length, (i) {
-      return Note(
+      return Todo(
         id: maps[i]['id'] as int,
         title: maps[i]['title'] as String,
         description: maps[i]['description'] as String,
-        created_at: DateTime.parse(maps[i]['created_at']),
+        deadline: DateTime.parse(maps[i]['deadline']),
+        isFinished: maps[i]['isFinished'] as int,
       );
     });
   }
