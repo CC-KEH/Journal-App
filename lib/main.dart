@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:journal/screens/home/home_screen.dart';
+import 'package:journal/home.dart';
 import 'package:journal/notifications.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       title: 'Journal',
       theme: themeNotifier.currentTheme,
       navigatorObservers: [routeObserver],
-      home: const HomeScreen(),
+      home: const Home(),
     );
   }
 }

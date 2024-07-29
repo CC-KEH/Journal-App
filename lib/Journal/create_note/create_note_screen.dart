@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:journal/models/note.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/notes_repository.dart';
-import 'package:journal/screens/Settings/Settings.dart';
+import 'package:journal/Settings/Settings.dart';
 import 'package:journal/utils.dart';
 import 'package:journal/components/media_icon.dart';
 import 'package:journal/theme_notifier.dart';

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:journal/constants.dart';
-import 'package:journal/helpers/drawer_navigation.dart';
 import 'package:journal/repository/todos_repository.dart';
-import 'package:journal/screens/Settings/Settings.dart';
-import 'package:journal/screens/Todo/create_todo_screen.dart';
-import 'package:journal/screens/Todo/widgets/todo_tile.dart';
+import 'package:journal/Settings/Settings.dart';
+import 'package:journal/Todo/create_todo_screen.dart';
+import 'package:journal/Todo/widgets/todo_tile.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +18,6 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const DrawerNavigation(),
       appBar: AppBar(
         title: const Text(
           'Todos',

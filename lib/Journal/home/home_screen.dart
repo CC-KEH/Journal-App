@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:journal/constants.dart';
-import 'package:journal/helpers/drawer_navigation.dart';
 import 'package:journal/models/note.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/notes_repository.dart';
-import 'package:journal/screens/Settings/Settings.dart';
-import 'package:journal/screens/create_note/create_note_screen.dart';
-import 'package:journal/screens/home/widgets/note_tile.dart';
+import 'package:journal/Settings/Settings.dart';
+import 'package:journal/Journal/create_note/create_note_screen.dart';
+import 'package:journal/Journal/home/widgets/note_tile.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journal/main.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class JournalScreen extends StatefulWidget {
+  const JournalScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<JournalScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with RouteAware {
+class _HomeScreenState extends State<JournalScreen> with RouteAware {
   bool _isSelectionMode = false;
   final Set<Note> _selectedNotes = {};
 
@@ -82,11 +81,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     return Scaffold(
-      drawer: const DrawerNavigation(),
       appBar: AppBar(
         title: const Text(
           'Journal',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:journal/models/todo.dart';
-import 'package:journal/screens/Todo/create_todo_screen.dart';
+import 'package:journal/Todo/create_todo_screen.dart';
 
 class TodoTile extends StatelessWidget {
   final Todo todo;

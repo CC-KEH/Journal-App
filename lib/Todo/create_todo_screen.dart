@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:journal/models/todo.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:journal/repository/todos_repository.dart';
-import 'package:journal/screens/Settings/Settings.dart';
+import 'package:journal/Settings/Settings.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:provider/provider.dart';
 
