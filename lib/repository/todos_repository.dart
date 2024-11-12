@@ -46,6 +46,17 @@ class TodosRepository {
     );
   }
 
+  static checkmark({required Todo todo}) async {
+    todo.isFinished = todo.isFinished==0 ? 1  : 0;
+    final db = await _database();
+    await db.update(
+      _table_name,
+      todo.toMap(),
+      where: 'id = ?',
+      whereArgs: [todo.id],
+    );
+  }
+
   static Future<List<Todo>> get_todos() async {
     final db = await _database();
     final List<Map<String, dynamic>> maps = await db.query(_table_name);

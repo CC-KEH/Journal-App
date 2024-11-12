@@ -11,10 +11,11 @@ class BottomNav extends StatelessWidget {
       child: GNav(
         onTabChange: (value)=> onTabChange!(value),
         mainAxisAlignment: MainAxisAlignment.center,
-        activeColor: Colors.white,
-        color: Colors.brown,
-        tabActiveBorder: Border.all(color: Colors.white),
-        gap: 8,
+        activeColor: Theme.of(context).colorScheme.primary,
+        color: Theme.of(context).colorScheme.primary,
+        tabActiveBorder: Border.all(color: Theme.of(context).colorScheme.primary),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        gap: 10,
         tabs: const [
           //About
           GButton(

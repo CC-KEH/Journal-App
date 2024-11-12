@@ -19,7 +19,8 @@ class CreateTodoScreen extends StatefulWidget {
 class _CreateTodoScreenState extends State<CreateTodoScreen> {
   final _title = TextEditingController();
   final _description = TextEditingController();
-  final _deadline_controller = TextEditingController();
+  final _deadlineController = TextEditingController();
+  final List<String> _subtasks = [];
   int _isFinished = 0;
   DateTime _deadline = DateTime.now();
 
@@ -37,53 +38,76 @@ class _CreateTodoScreenState extends State<CreateTodoScreen> {
     super.initState();
   }
 
-  _insert_todo() async {
+  _insertTodo() async {
     final todo = Todo(
       title: _title.text,
       description: _description.text,
-      deadline: DateTime.now(),
+      deadline: _deadline, // Use your selected deadline
       isFinished: _isFinished,
+      subtasks: _subtasks
+          .map((subtaskTitle) => Subtask(title: subtaskTitle))
+          .toList(), // Convert strings to List<Subtask>
     );
     await TodosRepository.insert(todo: todo);
   }
 
-  _update_todo() async {
+  _updateTodo() async {
     final todo = Todo(
       id: widget.todo!.id,
       title: _title.text,
       description: _description.text,
       deadline: widget.todo!.deadline,
       isFinished: _isFinished,
+      subtasks: _subtasks
+          .map((subtaskTitle) => Subtask(title: subtaskTitle))
+          .toList(), // Convert to List<Subtask>
     );
     await TodosRepository.update(todo: todo);
   }
 
-  _delete_todo() async {
-    // Instead of doing this send it to Completed Tasks
+  _deleteTodo() async {
     await TodosRepository.delete(todo: widget.todo!).then((e) {
       Navigator.pop(context);
     });
   }
 
-  _pick_deadline(BuildContext context) async {
-    var _picked_deadline = await showDatePicker(
+  _pickDeadline(BuildContext context) async {
+    var pickedDeadline = await showDatePicker(
       context: context,
       initialDate: _deadline,
       firstDate: DateTime(2024),
       lastDate: DateTime(2100),
     );
-    if (_picked_deadline != null) {
+    if (pickedDeadline != null) {
       setState(() {
-        _deadline = _picked_deadline;
-        _deadline_controller.text =
-            DateFormat('yyyy-mm-dd').format(_picked_deadline);
+        _deadline = pickedDeadline;
+        _deadlineController.text =
+            DateFormat('yyyy-MM-dd').format(pickedDeadline);
       });
     }
   }
 
+  _addSubtask() {
+    setState(() {
+      _subtasks.add('');
+    });
+  }
+
+  _updateSubtask(int index, String value) {
+    setState(() {
+      _subtasks[index] = value;
+    });
+  }
+
+  _removeSubtask(int index) {
+    setState(() {
+      _subtasks.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    const vertical_gap = SizedBox(height: 20);
+    const verticalGap = SizedBox(height: 20);
     final settingsProvider = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
@@ -99,7 +123,7 @@ class _CreateTodoScreenState extends State<CreateTodoScreen> {
                   child: const Text('Delete'),
                   onTap: () {
                     Navigator.pop(context);
-                    _delete_todo();
+                    _deleteTodo();
                   })
               : const SizedBox(),
           GestureDetector(
@@ -136,31 +160,80 @@ class _CreateTodoScreenState extends State<CreateTodoScreen> {
               cursorWidth: 2.0,
               cursorRadius: const Radius.circular(5.0),
             ),
-            vertical_gap,
-            Expanded(
-              child: TextField(
-                controller: _description,
-                decoration: InputDecoration(
-                  hintText: 'Description',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+            verticalGap,
+            TextField(
+              controller: _description,
+              decoration: InputDecoration(
+                hintText: 'Description',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              maxLines: 5,
+              cursorColor: Theme.of(context).primaryColor,
+              cursorWidth: 3.0,
+              cursorRadius: const Radius.circular(5.0),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GestureDetector(
+                onTap: _addSubtask,
+                child: Container(
+                  height: MediaQuery.of(context).size.height / 20,
+                  width: MediaQuery.of(context).size.width / 4,
+                  decoration: BoxDecoration(
+                      color: Colors.teal[800],
+                      borderRadius: BorderRadius.circular(20)),
+                  child: const Center(
+                    child: Text('Add Subtask'),
                   ),
                 ),
-                maxLines: 5,
-                cursorColor: Theme.of(context).primaryColor,
-                cursorWidth: 3.0,
-                cursorRadius: const Radius.circular(5.0),
               ),
             ),
-            vertical_gap,
+            // Display Subtasks List
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (int i = 0; i < _subtasks.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _removeSubtask(i),
+                            ),
+                            Expanded(
+                              child: TextField(
+                                onChanged: (value) => _updateSubtask(i, value),
+                                decoration: InputDecoration(
+                                  hintText: 'Subtask ${i + 1}',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            verticalGap,
+            verticalGap,
+            verticalGap,
+
             TextField(
-              controller: _deadline_controller,
+              controller: _deadlineController,
               decoration: InputDecoration(
                 labelText: 'Date',
                 hintText: 'Pick a deadline',
                 prefix: InkWell(
                   onTap: () {
-                    _pick_deadline(context);
+                    _pickDeadline(context);
                   },
                   child: const Icon(Icons.calendar_today),
                 ),
@@ -171,7 +244,7 @@ class _CreateTodoScreenState extends State<CreateTodoScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          widget.todo != null ? _update_todo() : _insert_todo();
+          widget.todo != null ? _updateTodo() : _insertTodo();
           Navigator.pop(context);
         },
         child: const Icon(Icons.save),

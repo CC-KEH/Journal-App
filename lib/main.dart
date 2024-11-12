@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:journal/home.dart';
-import 'package:journal/notifications.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  configureTimeZone();
-  initializeNotifications();
-  scheduleNotifications();
   runApp(
     MultiProvider(
       providers: [

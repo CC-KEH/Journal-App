@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:journal/constants.dart';
+import 'package:journal/main.dart';
 import 'package:journal/repository/todos_repository.dart';
 import 'package:journal/Settings/Settings.dart';
 import 'package:journal/Todo/create_todo_screen.dart';
@@ -14,7 +15,29 @@ class TodoScreen extends StatefulWidget {
   State<TodoScreen> createState() => _TodoScreenState();
 }
 
-class _TodoScreenState extends State<TodoScreen> {
+class _TodoScreenState extends State<TodoScreen> with RouteAware {
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ModalRoute? route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    setState(() {});
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,11 +76,8 @@ class _TodoScreenState extends State<TodoScreen> {
                 padding: const EdgeInsets.all(8.0),
                 children: [
                   for (var todo in snapshot.data!)
-                    GestureDetector(
-                      onTap: (){TodosRepository.delete(todo: todo);},
-                      child: TodoTile(
-                        todo: todo,
-                      ),
+                    TodoTile(
+                      todo: todo,
                     )
                 ],
               );

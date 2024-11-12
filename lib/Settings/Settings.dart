@@ -3,7 +3,6 @@ import 'package:journal/notifiers/settings_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journal/theme_notifier.dart';
 import 'package:provider/provider.dart';
-import 'package:journal/notifications.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function() onThemeChanged;
@@ -58,16 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  _toggleNotifications(bool value) {
-    setState(() => _isNotificationsOn = value);
-    _savePreferences();
-    if (_isNotificationsOn) {
-      scheduleNotifications(); // Enable notifications
-    } else {
-      cancelNotifications(); // Disable notifications
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     const _verticalGap = SizedBox(height: 20);
@@ -100,13 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   settingsProvider.setViewChange(value);
                   setState(() => _isGridView = value);
                 },
-              ),
-              _verticalGap,
-              SwitchListTile(
-                title: const Text('Notifications'),
-                value: _isNotificationsOn,
-                onChanged: _toggleNotifications,
-
               ),
               _verticalGap,
               SwitchListTile(
